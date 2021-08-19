@@ -38,12 +38,12 @@
                   <div class="row align-items-start">
                     <div v-for="image in filteredImages" :key="image.id" class="col-4 mb-5">
                       <div class="card" style="width: 18rem;">
-                        <img :src="require(`../../../pumpkin-express/pumpkin-uploads/${image.path}`)" class="card-img-top" alt="">
+                        <img :src="`${baseUrl}/${image.path}`" class="card-img-top" alt="">
                         <div class="card-body">
                           <p class="card-text">Name: {{image.name}}</p>
                           <p class="card-text">Contributer: {{image.username}}</p>
                           <p class="card-text">Downloads: {{image.downloads}}</p>
-                          <a class="btn primary-button" :href="require(`../../../pumpkin-express/pumpkin-uploads/${image.path}`)" download @click="download(image)" >Download</a>
+                          <button class="btn primary-button" @click="downloadAll(image)" >Download</button>
                         </div>
                       </div>
                     </div>
@@ -79,6 +79,7 @@ export default {
   name: 'Home',
   data() {
     return {
+      baseUrl: `http://localhost:3002/pumpkin-uploads`,
       toast: useToast(),
       technicalFilter: true,
       markettingFilter: true,
@@ -110,6 +111,42 @@ export default {
     download(image) {
       ++image.downloads;
       Image.download(image.id);
+    },
+    async downloadAll(selectedImage) {
+      const data = selectedImage.batch ? _.filter(this.data, (img) => selectedImage.name === img.name) : _.castArray(selectedImage);
+      for (const img of data) { 
+        await this.proceedDownload(img); 
+      } 
+    },
+    proceedDownload(img) {
+      return new Promise((resolve) => {
+        let url = `${this.baseUrl}/${img.path}`; 
+        this.downloadResource(url);
+        setTimeout(() => resolve(), 500);
+      });
+    },
+    forceDownload(blob, filename) {
+      var a = document.createElement('a');
+      a.download = filename;
+      a.href = blob;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    },
+    downloadResource(url, filename) {
+      if (!filename) filename = url.split('\\').pop().split('/').pop();
+      fetch(url, {
+          headers: new Headers({
+            'Origin': location.origin
+          }),
+          mode: 'cors'
+        })
+        .then(response => response.blob())
+        .then(blob => {
+          let blobUrl = window.URL.createObjectURL(blob);
+          this.forceDownload(blobUrl, filename);
+        })
+        .catch(e => console.error(e));
     },
   },
   async created() {
