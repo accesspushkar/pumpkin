@@ -23,13 +23,13 @@
             <input type="password" v-model="newUser.password" class="form-control" id="password" required>
           </div>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="userType" id="normal" :checked="newUser.type === 'normal'">
+            <input class="form-check-input" @click="newUser.type = 'normal'" type="radio" name="userType" id="normal" :checked="newUser.type === 'normal'">
             <label class="form-check-label" for="normal">
               Normal User
             </label>
           </div>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="userType" id="contributer" :checked="newUser.type === 'contributer'">
+            <input class="form-check-input" @click="newUser.type = 'contributer'" type="radio" name="userType" id="contributer" :checked="newUser.type === 'contributer'">
             <label class="form-check-label" for="contributer">
               Contributer
             </label>
