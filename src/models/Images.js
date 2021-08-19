@@ -18,6 +18,7 @@ export default {
           params.append("name", image.name);
           params.append("category", image.category);
           params.append("author", image.author);          
+          params.append("batch", image.batch);          
           const { data } = await uploadReq.post('/image/upload', params);
           return data;
         } catch (e) {
