@@ -9,8 +9,8 @@
     <div class="col-3">
        <div class="full-height border-box">
             <div class="d-grid gap-2">
-                <button class="btn" @click="activeTab = 'uploadTab'" type="button">Upload Image</button>
-                <button class="btn" @click="activeTab = 'downloadTab'" type="button">Download Report</button>
+                <button class="btn" @click="selectTab('uploadTab')" type="button">Upload Image</button>
+                <button class="btn" @click="selectTab('downloadTab')" type="button">Download Report</button>
             </div>
        </div>
     </div>
@@ -27,7 +27,7 @@
                         <label for="image" class="form-label">Image</label>
                         <input class="form-control" accept="image/*" 
                                type="file" id="image"
-                               @change="imageUploaded($event.target.files[0])">
+                               @change="imageUploaded($event.target.files)" multiple>
                     </div>
                     <div class="mb-3">
                         <label for="category" class="form-label">Category</label>
@@ -109,30 +109,41 @@ export default {
     },
   },
   methods: {
+    async selectTab(tab) {
+      this.activeTab = tab;
+      if (tab === 'downloadTab') await this.getImages();
+    },
     prevPage() {
       if(this.page !== 1) return this.page--;
       return;
+    },
+    async getImages() {
+      const token = this.user.id;
+      this.allImages = await Image.getAllUserImages(token);
     },
     nextPage() {
       if(this.allImages.length < 15) return;
       return this.page++;
     },
-    imageUploaded(file) {
-      this.image.file = file;
+    imageUploaded(files) {
+      this.image.files = files;
     },
     async upload() {
       if (this.image.name.length < 3) {
         this.toast.error('Please enter more than 3 characters for the name!');
-      } else if (!this.image.file) {
+      } else if (!this.image.files) {
         this.toast.error('Please upload a file!');
       } else {
-        const result = await Image.upload({
+        for(let i = 0; i < this.image.files.length; i++) {
+          var result = await Image.upload({
             name: this.image.name,
-            file: this.image.file,
+            file: this.image.files[i],
             category: this.image.category,
             author: this.user.id,
-        });
-        this.toast.success(result.message)
+            batch: this.image.files.length > 1,
+          });
+        }
+        this.toast.success(result.message)          
       }
     },
   },
@@ -140,7 +151,7 @@ export default {
     this.toast = useToast();
     const token = localStorage.getItem('auth-token')
     this.user = await User.getUser(token);
-    this.allImages = await Image.getAllUserImages(token);
+    await this.getImages();
   },
 }
 </script>
